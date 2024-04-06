@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+Modified: Blenders FC*/
 
 #include <stdio.h>
 #include "op3_head_control_module/head_control_module.h"
@@ -76,9 +77,11 @@ void HeadControlModule::initialize(const int control_cycle_msec, robotis_framewo
   control_cycle_msec_ = control_cycle_msec;
 
   ros::NodeHandle ros_node;
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   /* publish topics */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis/status", 0);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 0);
 
 }
 
@@ -89,12 +92,15 @@ void HeadControlModule::queueThread()
 
   ros_node.setCallbackQueue(&callback_queue);
 
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
+
   /* subscribe topics */
-  ros::Subscriber set_head_joint_sub = ros_node.subscribe("/robotis/head_control/set_joint_states", 1,
+  ros::Subscriber set_head_joint_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/head_control/set_joint_states", 1,
                                                           &HeadControlModule::setHeadJointCallback, this);
-  ros::Subscriber set_head_joint_offset_sub = ros_node.subscribe("/robotis/head_control/set_joint_states_offset", 1,
+  ros::Subscriber set_head_joint_offset_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/head_control/set_joint_states_offset", 1,
                                                                  &HeadControlModule::setHeadJointOffsetCallback, this);
-  ros::Subscriber set_head_scan_sub = ros_node.subscribe("/robotis/head_control/scan_command", 1,
+  ros::Subscriber set_head_scan_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/head_control/scan_command", 1,
                                                          &HeadControlModule::setHeadScanCallback, this);
 
   ros::WallDuration duration(control_cycle_msec_ / 1000.0);

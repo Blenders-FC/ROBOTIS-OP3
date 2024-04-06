@@ -70,6 +70,7 @@ private:
     double err_tol_;
 
     bool is_moving_walking_;
+    int robot_id;
 
     boost::mutex mutex_;
 

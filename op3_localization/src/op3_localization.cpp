@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: SCH */
+/* Author: SCH 
+Modified: Blenders FC*/
 
 #include "op3_localization/op3_localization.h"
 
@@ -27,6 +28,8 @@ OP3Localization::OP3Localization()
    err_tol_(0.2),
    is_moving_walking_(false)
 {
+  ros_node_.param<int>("robot_id", robot_id, 0);
+
   initialize();
 
   pelvis_pose_base_walking_.pose.position.x = 0.0;
@@ -64,12 +67,12 @@ OP3Localization::~OP3Localization()
 void OP3Localization::initialize()
 {
   // subscriber
-  pelvis_pose_msg_sub_ = ros_node_.subscribe("/robotis/pelvis_pose", 5,
+  pelvis_pose_msg_sub_ = ros_node_.subscribe("/robotis_" + std::to_string(robot_id) + "/pelvis_pose", 5,
                                              &OP3Localization::pelvisPoseCallback, this);
 //  pelvis_base_walking_msg_sub_ = ros_node_.subscribe("/robotis/pelvis_pose_base_walking", 5,
 //                                                               &OP3Localization::pelvisPoseBaseWalkingCallback, this);
 
-  pelvis_reset_msg_sub_ = ros_node_.subscribe("/robotis/pelvis_pose_reset", 5,
+  pelvis_reset_msg_sub_ = ros_node_.subscribe("/robotis_" + std::to_string(robot_id) + "/pelvis_pose_reset", 5,
                                                        &OP3Localization::pelvisPoseResetCallback, this);
 
 }

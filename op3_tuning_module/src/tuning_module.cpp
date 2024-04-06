@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman, SCH */
+/* Author: Kayman, SCH 
+Modified: Blenders FC*/
 
 #include <stdio.h>
 #include "op3_tuning_module/tuning_module.h"
@@ -63,11 +64,13 @@ void TuningModule::initialize(const int control_cycle_msec, robotis_framework::R
   }
 
   ros::NodeHandle ros_node;
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   /* publish topics */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis/status", 1);
-  set_ctrl_module_pub_ = ros_node.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 1);
-  sync_write_pub_ = ros_node.advertise<robotis_controller_msgs::SyncWriteItem>("/robotis/sync_write_item", 1);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
+  set_ctrl_module_pub_ = ros_node.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/enable_ctrl_module", 1);
+  sync_write_pub_ = ros_node.advertise<robotis_controller_msgs::SyncWriteItem>("/robotis_" + std::to_string(robot_id) + "/sync_write_item", 1);
 
   tune_pose_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/data/tune_pose.yaml";
   offset_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/data/offset.yaml";
@@ -312,24 +315,26 @@ void TuningModule::queueThread()
   ros::CallbackQueue callback_queue;
 
   ros_node.setCallbackQueue(&callback_queue);
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   /* subscribe topics */
-  ros::Subscriber ini_pose_msg_sub = ros_node.subscribe("/robotis/tuning_module/tuning_pose", 5, &TuningModule::tunePoseMsgCallback,
+  ros::Subscriber ini_pose_msg_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/tuning_module/tuning_pose", 5, &TuningModule::tunePoseMsgCallback,
                                                         this);
 
-  joint_offset_data_sub_ = ros_node.subscribe("/robotis/tuning_module/joint_offset_data", 10,
+  joint_offset_data_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/tuning_module/joint_offset_data", 10,
                                               &TuningModule::jointOffsetDataCallback, this);
-  joint_gain_data_sub_ = ros_node.subscribe("/robotis/tuning_module/joint_gain_data", 10,
+  joint_gain_data_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/tuning_module/joint_gain_data", 10,
                                             &TuningModule::jointGainDataCallback, this);
-  joint_torque_enable_sub_ = ros_node.subscribe("/robotis/tuning_module/torque_enable", 10,
+  joint_torque_enable_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/tuning_module/torque_enable", 10,
                                                 &TuningModule::jointTorqueOnOffCallback, this);
-  command_sub_ = ros_node.subscribe("/robotis/tuning_module/command", 5, &TuningModule::commandCallback, this);
-  offset_data_server_ = ros_node.advertiseService("robotis/tuning_module/get_present_joint_offset_data",
+  command_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/tuning_module/command", 5, &TuningModule::commandCallback, this);
+  offset_data_server_ = ros_node.advertiseService("robotis_" + std::to_string(robot_id) + "/tuning_module/get_present_joint_offset_data",
                                                   &TuningModule::getPresentJointOffsetDataServiceCallback, this);
 
-  set_module_client_ = ros_node.serviceClient<robotis_controller_msgs::SetModule>("/robotis/set_present_ctrl_modules");
-  enable_offset_pub_ =  ros_node.advertise<std_msgs::Bool>("/robotis/enable_offset", 1);
-  load_offset_client_ = ros_node.serviceClient<robotis_controller_msgs::LoadOffset>("/robotis/load_offset");
+  set_module_client_ = ros_node.serviceClient<robotis_controller_msgs::SetModule>("/robotis_" + std::to_string(robot_id) + "/set_present_ctrl_modules");
+  enable_offset_pub_ =  ros_node.advertise<std_msgs::Bool>("/robotis_" + std::to_string(robot_id) + "/enable_offset", 1);
+  load_offset_client_ = ros_node.serviceClient<robotis_controller_msgs::LoadOffset>("/robotis_" + std::to_string(robot_id) + "/load_offset");
 
   ros::WallDuration duration(control_cycle_msec_ / 1000.0);
   while (ros_node.ok())

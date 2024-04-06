@@ -14,10 +14,12 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Authors: Kayman, Jay Song */
+/* Authors: Kayman, Jay Song 
+Modified: Blenders FC*/
 
 #include <stdio.h>
 #include <sstream>
+#include <string>
 #include "op3_action_module/action_module.h"
 
 namespace robotis_op
@@ -115,18 +117,21 @@ void ActionModule::queueThread()
 
   ros_node.setCallbackQueue(&callback_queue);
 
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
+
   /* publisher */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis/status", 0);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 0);
   done_msg_pub_ = ros_node.advertise<std_msgs::String>("/robotis/movement_done", 1);
 
   /* subscriber */
-  ros::Subscriber action_page_sub = ros_node.subscribe("/robotis/action/page_num", 0, &ActionModule::pageNumberCallback,
+  ros::Subscriber action_page_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/action/page_num", 0, &ActionModule::pageNumberCallback,
                                                        this);
-  ros::Subscriber start_action_sub = ros_node.subscribe("/robotis/action/start_action", 0,
+  ros::Subscriber start_action_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/action/start_action", 0,
                                                         &ActionModule::startActionCallback, this);
 
   /* ROS Service Callback Functions */
-  ros::ServiceServer is_running_server = ros_node.advertiseService("/robotis/action/is_running",
+  ros::ServiceServer is_running_server = ros_node.advertiseService("/robotis_" + std::to_string(robot_id) + "/action/is_running",
                                                                    &ActionModule::isRunningServiceCallback, this);
 
   ros::WallDuration duration(control_cycle_msec_ / 1000.0);

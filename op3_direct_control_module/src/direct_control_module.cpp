@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+Modified: Blenders FC*/
 
 #include <stdio.h>
 #include "op3_direct_control_module/direct_control_module.h"
@@ -88,25 +89,28 @@ void DirectControlModule::initialize(const int control_cycle_msec, robotis_frame
   control_cycle_msec_ = control_cycle_msec;
 
   ros::NodeHandle ros_node;
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   /* get Param */
-  ros_node.param<double>("/robotis/direct_control/default_moving_time", default_moving_time_, default_moving_time_);
-  ros_node.param<double>("/robotis/direct_control/default_moving_angle", default_moving_angle_, default_moving_angle_);
-  ros_node.param<bool>("/robotis/direct_control/check_collision", check_collision_, check_collision_);
+  ros_node.param<double>("/robotis_" + std::to_string(robot_id) + "/direct_control/default_moving_time", default_moving_time_, default_moving_time_);
+  ros_node.param<double>("/robotis_" + std::to_string(robot_id) + "/direct_control/default_moving_angle", default_moving_angle_, default_moving_angle_);
+  ros_node.param<bool>("/robotis_" + std::to_string(robot_id) + "/direct_control/check_collision", check_collision_, check_collision_);
 
   /* publish topics */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis/status", 0);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 0);
 }
 
 void DirectControlModule::queueThread()
 {
   ros::NodeHandle ros_node;
   ros::CallbackQueue callback_queue;
-
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
   ros_node.setCallbackQueue(&callback_queue);
 
   /* subscribe topics */
-  ros::Subscriber set_head_joint_sub = ros_node.subscribe("/robotis/direct_control/set_joint_states", 1,
+  ros::Subscriber set_head_joint_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/direct_control/set_joint_states", 1,
                                                           &DirectControlModule::setJointCallback, this);
 
   ros::WallDuration duration(control_cycle_msec_ / 1000.0);

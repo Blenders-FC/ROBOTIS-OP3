@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+Modified: Blenders FC*/
 
 #include "op3_walking_module/op3_walking_module.h"
 
@@ -163,19 +164,21 @@ void WalkingModule::queueThread()
   ros::CallbackQueue callback_queue;
 
   ros_node.setCallbackQueue(&callback_queue);
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   /* publish topics */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("robotis/status", 1);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("robotis_" + std::to_string(robot_id) + "/status", 1);
 
   /* ROS Service Callback Functions */
-  ros::ServiceServer get_walking_param_server = ros_node.advertiseService("/robotis/walking/get_params",
+  ros::ServiceServer get_walking_param_server = ros_node.advertiseService("/robotis_" + std::to_string(robot_id) + "/walking/get_params",
                                                                           &WalkingModule::getWalkigParameterCallback,
                                                                           this);
 
   /* sensor topic subscribe */
-  ros::Subscriber walking_command_sub = ros_node.subscribe("/robotis/walking/command", 0,
+  ros::Subscriber walking_command_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/walking/command", 0,
                                                            &WalkingModule::walkingCommandCallback, this);
-  ros::Subscriber walking_param_sub = ros_node.subscribe("/robotis/walking/set_params", 0,
+  ros::Subscriber walking_param_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/walking/set_params", 0,
                                                          &WalkingModule::walkingParameterCallback, this);
 
   ros::WallDuration duration(control_cycle_msec_ / 1000.0);

@@ -22,6 +22,8 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+add_definitions(-std=c++11)
+
 ################################################################################
 # Setup for python modules and scripts
 ################################################################################

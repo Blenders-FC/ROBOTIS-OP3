@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman, SCH */
+/* Author: Kayman, SCH 
+Modified: Blenders FC*/
 
 #include <stdio.h>
 #include "op3_base_module/base_module.h"
@@ -59,13 +60,15 @@ void BaseModule::initialize(const int control_cycle_msec, robotis_framework::Rob
   }
 
   ros::NodeHandle ros_node;
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   /* Load ROS Parameter */
   ros_node.param<std::string>("init_pose_file_path", init_pose_file_path_, ros::package::getPath("op3_base_module") + "/data/ini_pose.yaml");
 
   /* publish topics */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis/status", 1);
-  set_ctrl_module_pub_ = ros_node.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 1);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
+  set_ctrl_module_pub_ = ros_node.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/enable_ctrl_module", 1);
 }
 
 void BaseModule::parseInitPoseData(const std::string &path)

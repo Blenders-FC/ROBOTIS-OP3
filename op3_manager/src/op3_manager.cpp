@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+Modified: Blenders FC*/
 
 /* ROS API Header */
 #include <ros/ros.h>
@@ -144,6 +145,7 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "op3_manager");
   ros::NodeHandle nh;
+  int robot_id = 0;
 
   ROS_INFO("manager->init");
   RobotisController *controller = RobotisController::getInstance();
@@ -155,11 +157,12 @@ int main(int argc, char **argv)
   nh.param<std::string>("init_file_path", g_init_file, "");
   nh.param<std::string>("device_name", g_device_name, SUB_CONTROLLER_DEVICE);
   nh.param<int>("baud_rate", g_baudrate, BAUD_RATE);
+  nh.param<int>("robot_id", robot_id, 0); 
 
-  ros::Subscriber button_sub = nh.subscribe("/robotis/open_cr/button", 1, buttonHandlerCallback);
-  ros::Subscriber dxl_torque_sub = nh.subscribe("/robotis/dxl_torque", 1, dxlTorqueCheckCallback);
-  g_init_pose_pub = nh.advertise<std_msgs::String>("/robotis/base/ini_pose", 0);
-  g_demo_command_pub = nh.advertise<std_msgs::String>("/ball_tracker/command", 0);
+  ros::Subscriber button_sub = nh.subscribe("/robotis_" + std::to_string(robot_id) + "/open_cr/button", 1, buttonHandlerCallback);
+  ros::Subscriber dxl_torque_sub = nh.subscribe("/robotis_" + std::to_string(robot_id) + "/dxl_torque", 1, dxlTorqueCheckCallback);
+  g_init_pose_pub = nh.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/base/ini_pose", 0);
+  g_demo_command_pub = nh.advertise<std_msgs::String>("robotis_" + std::to_string(robot_id) + "/ball_tracker/command", 0);
 
   nh.param<bool>("gazebo", controller->gazebo_mode_, false);
   g_is_simulation = controller->gazebo_mode_;

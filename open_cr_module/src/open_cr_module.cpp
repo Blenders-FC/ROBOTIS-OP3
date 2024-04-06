@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+Modified: Blenders FC*/
 
 #include <stdio.h>
 
@@ -82,13 +83,16 @@ void OpenCRModule::queueThread()
   ros::NodeHandle ros_node;
   ros::CallbackQueue callback_queue;
 
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
+
   ros_node.setCallbackQueue(&callback_queue);
 
   /* publisher */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis/status", 1);
-  imu_pub_ = ros_node.advertise<sensor_msgs::Imu>("/robotis/open_cr/imu", 1);
-  button_pub_ = ros_node.advertise<std_msgs::String>("/robotis/open_cr/button", 1);
-  dxl_power_msg_pub_ = ros_node.advertise<robotis_controller_msgs::SyncWriteItem>("/robotis/sync_write_item", 0);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
+  imu_pub_ = ros_node.advertise<sensor_msgs::Imu>("/robotis_" + std::to_string(robot_id) + "/open_cr/imu", 1);
+  button_pub_ = ros_node.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/open_cr/button", 1);
+  dxl_power_msg_pub_ = ros_node.advertise<robotis_controller_msgs::SyncWriteItem>("/robotis_" + std::to_string(robot_id) + "/sync_write_item", 0);
 
   ros::WallDuration duration(control_cycle_msec_ / 1000.0);
   while (ros_node.ok())

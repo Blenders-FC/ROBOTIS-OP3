@@ -14,7 +14,8 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: SCH */
+/* Author: SCH 
+Modified: Blenders FC*/
 
 #include "op3_online_walking_module/online_walking_module.h"
 
@@ -170,12 +171,14 @@ void OnlineWalkingModule::initialize(const int control_cycle_msec, robotis_frame
   queue_thread_      = boost::thread(boost::bind(&OnlineWalkingModule::queueThread, this));
 
   ros::NodeHandle ros_node;
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   // Publisher
-  status_msg_pub_       = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis/status", 1);
-  movement_done_pub_    = ros_node.advertise<std_msgs::String>("/robotis/movement_done", 1);
-  goal_joint_state_pub_ = ros_node.advertise<sensor_msgs::JointState>("/robotis/online_walking/goal_joint_states", 1);
-  pelvis_pose_pub_      = ros_node.advertise<geometry_msgs::PoseStamped>("/robotis/pelvis_pose", 1);
+  status_msg_pub_       = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
+  movement_done_pub_    = ros_node.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/movement_done", 1);
+  goal_joint_state_pub_ = ros_node.advertise<sensor_msgs::JointState>("/robotis_" + std::to_string(robot_id) + "/online_walking/goal_joint_states", 1);
+  pelvis_pose_pub_      = ros_node.advertise<geometry_msgs::PoseStamped>("/robotis_" + std::to_string(robot_id) + "/pelvis_pose", 1);
 
   // Service
 //  get_preview_matrix_client_ = ros_node.serviceClient<op3_online_walking_module_msgs::GetPreviewMatrix>("/robotis/online_walking/get_preview_matrix", 0);
@@ -187,26 +190,28 @@ void OnlineWalkingModule::queueThread()
   ros::CallbackQueue  callback_queue;
 
   ros_node.setCallbackQueue(&callback_queue);
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
 
   // Subscriber
-  ros::Subscriber reset_body_sub_ = ros_node.subscribe("/robotis/online_walking/reset_body", 5,
+  ros::Subscriber reset_body_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/reset_body", 5,
                                                        &OnlineWalkingModule::setResetBodyCallback, this);
-  ros::Subscriber joint_pose_sub_ = ros_node.subscribe("/robotis/online_walking/goal_joint_pose", 5,
+  ros::Subscriber joint_pose_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/goal_joint_pose", 5,
                                                        &OnlineWalkingModule::goalJointPoseCallback, this);
-  ros::Subscriber kinematics_pose_sub_ = ros_node.subscribe("/robotis/online_walking/goal_kinematics_pose", 5,
+  ros::Subscriber kinematics_pose_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/goal_kinematics_pose", 5,
                                                             &OnlineWalkingModule::goalKinematicsPoseCallback, this);
-  ros::Subscriber foot_step_command_sub_ = ros_node.subscribe("/robotis/online_walking/foot_step_command", 5,
+  ros::Subscriber foot_step_command_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/foot_step_command", 5,
                                                               &OnlineWalkingModule::footStepCommandCallback, this);
-  ros::Subscriber walking_param_sub_ = ros_node.subscribe("/robotis/online_walking/walking_param", 5,
+  ros::Subscriber walking_param_sub_ = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/walking_param", 5,
                                                           &OnlineWalkingModule::walkingParamCallback, this);
-  ros::Subscriber wholebody_balance_msg_sub = ros_node.subscribe("/robotis/online_walking/wholebody_balance_msg", 5,
+  ros::Subscriber wholebody_balance_msg_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/wholebody_balance_msg", 5,
                                                                  &OnlineWalkingModule::setWholebodyBalanceMsgCallback, this);
-  ros::Subscriber body_offset_msg_sub = ros_node.subscribe("/robotis/online_walking/body_offset", 5,
+  ros::Subscriber body_offset_msg_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/body_offset", 5,
                                                            &OnlineWalkingModule::setBodyOffsetCallback, this);
-  ros::Subscriber foot_distance_msg_sub = ros_node.subscribe("/robotis/online_walking/foot_distance", 5,
+  ros::Subscriber foot_distance_msg_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/foot_distance", 5,
                                                              &OnlineWalkingModule::setFootDistanceCallback, this);
 
-  ros::Subscriber footsteps_sub = ros_node.subscribe("/robotis/online_walking/footsteps_2d", 5,
+  ros::Subscriber footsteps_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/online_walking/footsteps_2d", 5,
                                                      &OnlineWalkingModule::footStep2DCallback, this);
 
 //  ros::Subscriber imu_data_sub = ros_node.subscribe("/robotis/sensor/imu/imu", 5,
@@ -217,14 +222,14 @@ void OnlineWalkingModule::queueThread()
 //                                                     &OnlineWalkingModule::rightFootForceTorqueOutputCallback, this);
 
   // Service
-  ros::ServiceServer get_joint_pose_server = ros_node.advertiseService("/robotis/online_walking/get_joint_pose",
+  ros::ServiceServer get_joint_pose_server = ros_node.advertiseService("/robotis_" + std::to_string(robot_id) + "/online_walking/get_joint_pose",
                                                                        &OnlineWalkingModule::getJointPoseCallback, this);
-  ros::ServiceServer get_kinematics_pose_server = ros_node.advertiseService("/robotis/online_walking/get_kinematics_pose",
+  ros::ServiceServer get_kinematics_pose_server = ros_node.advertiseService("/robotis_" + std::to_string(robot_id) + "/online_walking/get_kinematics_pose",
                                                                             &OnlineWalkingModule::getKinematicsPoseCallback, this);
 
   ros::WallDuration duration(control_cycle_sec_);
   while(ros_node.ok())
-    callback_queue.callAvailable(duration);
+  callback_queue.callAvailable(duration);
 }
 
 void OnlineWalkingModule::resetBodyPose()

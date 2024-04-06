@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Boost REQUIRED)
 
+add_definitions(-std=c++11)
+
 ################################################################################
 # Setup for python modules and scripts
 ################################################################################
