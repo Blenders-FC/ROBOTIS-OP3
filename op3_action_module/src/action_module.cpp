@@ -122,7 +122,7 @@ void ActionModule::queueThread()
 
   /* publisher */
   status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 0);
-  done_msg_pub_ = ros_node.advertise<std_msgs::String>("/robotis/movement_done", 1);
+  done_msg_pub_ = ros_node.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/movement_done", 1);
 
   /* subscriber */
   ros::Subscriber action_page_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/action/page_num", 0, &ActionModule::pageNumberCallback,
