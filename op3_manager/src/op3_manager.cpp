@@ -162,7 +162,7 @@ int main(int argc, char **argv)
   ros::Subscriber button_sub = nh.subscribe("/robotis_" + std::to_string(robot_id) + "/open_cr/button", 1, buttonHandlerCallback);
   ros::Subscriber dxl_torque_sub = nh.subscribe("/robotis_" + std::to_string(robot_id) + "/dxl_torque", 1, dxlTorqueCheckCallback);
   g_init_pose_pub = nh.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/base/ini_pose", 0);
-  g_demo_command_pub = nh.advertise<std_msgs::String>("robotis_" + std::to_string(robot_id) + "/ball_tracker/command", 0);
+  g_demo_command_pub = nh.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/ball_tracker/command", 0);
 
   nh.param<bool>("gazebo", controller->gazebo_mode_, false);
   g_is_simulation = controller->gazebo_mode_;
