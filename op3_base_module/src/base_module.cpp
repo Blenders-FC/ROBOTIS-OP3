@@ -150,6 +150,9 @@ void BaseModule::queueThread()
 
   ros_node.setCallbackQueue(&callback_queue);
 
+  int robot_id = 0;
+  ros_node.param<int>("robot_id", robot_id, 0);
+
   /* subscribe topics */
   ros::Subscriber ini_pose_msg_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/base/ini_pose", 5, &BaseModule::initPoseMsgCallback,
                                                         this);
