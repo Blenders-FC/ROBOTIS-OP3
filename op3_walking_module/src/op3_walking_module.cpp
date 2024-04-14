@@ -168,7 +168,7 @@ void WalkingModule::queueThread()
   ros_node.param<int>("robot_id", robot_id, 0);
 
   /* publish topics */
-  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("robotis_" + std::to_string(robot_id) + "/status", 1);
+  status_msg_pub_ = ros_node.advertise<robotis_controller_msgs::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
 
   /* ROS Service Callback Functions */
   ros::ServiceServer get_walking_param_server = ros_node.advertiseService("/robotis_" + std::to_string(robot_id) + "/walking/get_params",
