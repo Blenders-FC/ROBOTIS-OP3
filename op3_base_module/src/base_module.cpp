@@ -151,9 +151,9 @@ void BaseModule::queueThread()
   ros_node.setCallbackQueue(&callback_queue);
 
   /* subscribe topics */
-  ros::Subscriber ini_pose_msg_sub = ros_node.subscribe("/robotis/base/ini_pose", 5, &BaseModule::initPoseMsgCallback,
+  ros::Subscriber ini_pose_msg_sub = ros_node.subscribe("/robotis_" + std::to_string(robot_id) + "/base/ini_pose", 5, &BaseModule::initPoseMsgCallback,
                                                         this);
-  set_module_client_ = ros_node.serviceClient<robotis_controller_msgs::SetModule>("/robotis/set_present_ctrl_modules");
+  set_module_client_ = ros_node.serviceClient<robotis_controller_msgs::SetModule>("/robotis_" + std::to_string(robot_id) + "/set_present_ctrl_modules");
 
   ros::WallDuration duration(control_cycle_msec_ / 1000.0);
   while (ros_node.ok())
