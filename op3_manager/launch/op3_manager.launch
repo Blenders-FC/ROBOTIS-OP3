@@ -14,6 +14,6 @@
 	  <param name="angle_unit" value="30" />
 	</node>
 
-    <!-- OP3 Localization -->
-    <node pkg="op3_localization" type="op3_localization" name="op3_localization" output="screen"/>
+    <!-- OP3 Localization 
+    <node pkg="op3_localization" type="op3_localization" name="op3_localization" output="screen"/-->
 </launch>
