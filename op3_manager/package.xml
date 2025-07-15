@@ -36,5 +36,6 @@
   <depend>op3_tuning_module</depend>
   <depend>op3_tuning_module_msgs</depend>
   <depend>footstep_walking_module</depend>
+  <depend>blenders_msgs</depend>
   <exec_depend>op3_localization</exec_depend>
 </package>

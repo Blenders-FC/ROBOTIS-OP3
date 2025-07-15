@@ -36,6 +36,7 @@ Modified: Blenders FC*/
 #include "op3_online_walking_module/online_walking_module.h"
 #include "op3_tuning_module/tuning_module.h"
 #include "footstep_walking_module/footstep_walking_module.h"
+#include "blenders_msgs/RobotPose.h"
 
 using namespace robotis_framework;
 using namespace dynamixel;
@@ -60,6 +61,7 @@ std::string g_device_name;
 
 ros::Publisher g_init_pose_pub;
 ros::Publisher g_demo_command_pub;
+ros::Publisher robot_init_pose_pub;
 
 void buttonHandlerCallback(const std_msgs::String::ConstPtr& msg)
 {
@@ -163,6 +165,7 @@ int main(int argc, char **argv)
   ros::Subscriber button_sub = nh.subscribe("/robotis_" + std::to_string(robot_id) + "/open_cr/button", 1, buttonHandlerCallback);
   ros::Subscriber dxl_torque_sub = nh.subscribe("/robotis_" + std::to_string(robot_id) + "/dxl_torque", 1, dxlTorqueCheckCallback);
   g_init_pose_pub = nh.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/base/ini_pose", 0);
+  robot_init_pose_pub = nh.advertise<blenders_msgs::RobotPose>("/robotis_" + std::to_string(robot_id) + "/robot_pose/init_pose", 0);
   g_demo_command_pub = nh.advertise<std_msgs::String>("/robotis_" + std::to_string(robot_id) + "/ball_tracker/command", 0);
 
   nh.param<bool>("gazebo", controller->gazebo_mode_, false);
@@ -248,8 +251,8 @@ int main(int argc, char **argv)
   controller->addMotionModule((MotionModule*) HeadControlModule::getInstance());
   controller->addMotionModule((MotionModule*) WalkingModule::getInstance());
   controller->addMotionModule((MotionModule*) DirectControlModule::getInstance());
-  controller->addMotionModule((MotionModule*) OnlineWalkingModule::getInstance());
-  controller->addMotionModule((MotionModule*) TuningModule::getInstance());
+  //controller->addMotionModule((MotionModule*) OnlineWalkingModule::getInstance());
+  //controller->addMotionModule((MotionModule*) TuningModule::getInstance());
   controller->addMotionModule((MotionModule*) FootstepWalkingModule::getInstance());
 
   // start timer
@@ -263,6 +266,11 @@ int main(int argc, char **argv)
 
   g_init_pose_pub.publish(init_msg);
   ROS_INFO("Go to init pose");
+
+  blenders_msgs::RobotPose start_msg;
+  start_msg.valid = false;
+  robot_init_pose_pub.publish(start_msg);
+  ROS_INFO("Publish robot start init pose");
 
   while (ros::ok())
   {
