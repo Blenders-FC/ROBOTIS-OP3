@@ -1,8 +1,10 @@
 <?xml version="1.0" ?>
 <launch>    
+    <arg name="robot_id"                  default="$(env ROBOT_ID)"      doc="robot id [1, 2, 3, 4]"/>
+    
     <param name="gazebo"                   value="false"    type="bool"/>
     <param name="gazebo_robot_name"        value="robotis_op3"/>
-    <param name="robot_id"                 value="2"/>
+    <param name="robot_id"                 value="$(arg robot_id)"/>
     
     <param name="offset_file_path"         value="$(find op3_tuning_module)/data/offset.yaml"/>
     <param name="robot_file_path"          value="$(find op3_manager)/config/OP3.robot"/>
