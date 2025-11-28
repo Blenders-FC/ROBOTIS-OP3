@@ -68,13 +68,19 @@ void BaseModule::initialize(const int control_cycle_msec, robotis_framework::Rob
     result_[joint_name]->goal_position_ = dxl_info->dxl_state_->goal_position_;
   }
 
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
+
   /* Load ROS Parameter */
   this->declare_parameter<std::string>("init_pose_file_path", ament_index_cpp::get_package_share_directory("op3_base_module") + "/data/ini_pose.yaml");
   init_pose_file_path_ = this->get_parameter("init_pose_file_path").as_string();
 
   /* publish topics */
-  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis/status", 1);
-  set_ctrl_module_pub_ = this->create_publisher<std_msgs::msg::String>("/robotis/enable_ctrl_module", 1);
+  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
+  set_ctrl_module_pub_ = this->create_publisher<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/enable_ctrl_module", 1);
 
   queue_thread_ = std::make_unique<std::thread>(&BaseModule::queueThread, this);
 }
@@ -155,11 +161,16 @@ void BaseModule::queueThread()
 {
   auto executor = rclcpp::executors::SingleThreadedExecutor();
   executor.add_node(this->get_node_base_interface());
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
 
   /* subscribe topics */
-  auto ini_pose_msg_sub = this->create_subscription<std_msgs::msg::String>("/robotis/base/ini_pose", 5, 
+  auto ini_pose_msg_sub = this->create_subscription<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/base/ini_pose", 5, 
                                     std::bind(&BaseModule::initPoseMsgCallback, this, std::placeholders::_1));
-  set_module_client_ = this->create_client<robotis_controller_msgs::srv::SetModule>("/robotis/set_present_ctrl_modules");
+  set_module_client_ = this->create_client<robotis_controller_msgs::srv::SetModule>("/robotis_" + std::to_string(robot_id) + "/set_present_ctrl_modules");
 
   rclcpp::Rate rate(1000.0 / control_cycle_msec_);
   while (rclcpp::ok())

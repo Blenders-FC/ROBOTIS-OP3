@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: SCH */
+/* Author: SCH 
+    Modified: Blenders FC
+*/
 
 #include "op3_localization/op3_localization.h"
 #include "robotis_math/robotis_math.h"
@@ -65,14 +67,19 @@ OP3Localization::~OP3Localization()
 
 void OP3Localization::initialize()
 {
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
   // subscriber
   pelvis_pose_msg_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-    "/robotis/pelvis_pose", 5, std::bind(&OP3Localization::pelvisPoseCallback, this, std::placeholders::_1));
+    "/robotis_" + std::to_string(robot_id) + "/pelvis_pose", 5, std::bind(&OP3Localization::pelvisPoseCallback, this, std::placeholders::_1));
 //  pelvis_base_walking_msg_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
 //      "/robotis/pelvis_pose_base_walking", 5, std::bind(&OP3Localization::pelvisPoseBaseWalkingCallback, this, std::placeholders::_1));
 
   pelvis_reset_msg_sub_ = this->create_subscription<std_msgs::msg::String>(
-    "/robotis/pelvis_pose_reset", 5, std::bind(&OP3Localization::pelvisPoseResetCallback, this, std::placeholders::_1));
+    "/robotis_" + std::to_string(robot_id) + "/pelvis_pose_reset", 5, std::bind(&OP3Localization::pelvisPoseResetCallback, this, std::placeholders::_1));
 
 }
 
@@ -155,7 +162,9 @@ void OP3Localization::process()
   pelvis_trans_.transform.rotation = pelvis_pose_.pose.orientation;
 
   rclcpp::Duration transform_tolerance = rclcpp::Duration::from_seconds(transform_tolerance_);
-  rclcpp::Time transform_expiration = (pelvis_pose_.header.stamp + transform_tolerance);
+  //rclcpp::Time transform_expiration = (pelvis_pose_.header.stamp + transform_tolerance);
+  rclcpp::Time transform_expiration = pelvis_pose_.header.stamp;
+  transform_expiration += transform_tolerance;  // Add duration to time
 
   geometry_msgs::msg::TransformStamped tmp_tf_stamped;
   tmp_tf_stamped.header.stamp = transform_expiration;

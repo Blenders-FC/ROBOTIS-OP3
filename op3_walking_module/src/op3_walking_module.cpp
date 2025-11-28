@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+Modified: Blenders FC
+*/
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include "op3_walking_module/op3_walking_module.h"
@@ -177,18 +179,23 @@ void WalkingModule::queueThread()
   auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   executor->add_node(this->get_node_base_interface());
 
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
+
   /* publish topics */
-  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("robotis/status", 1);
+  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
 
   /* ROS Service Callback Functions */
   auto get_walking_param_server = this->create_service<op3_walking_module_msgs::srv::GetWalkingParam>(
-    "/robotis/walking/get_params", std::bind(&WalkingModule::getWalkingParameterCallback, this, std::placeholders::_1, std::placeholders::_2));
-
+    "/robotis_" + std::to_string(robot_id) + "/walking/get_params", std::bind(&WalkingModule::getWalkingParameterCallback, this, std::placeholders::_1, std::placeholders::_2));
   /* sensor topic subscribe */
   auto walking_command_sub = this->create_subscription<std_msgs::msg::String>(
-    "/robotis/walking/command", 10, std::bind(&WalkingModule::walkingCommandCallback, this, std::placeholders::_1));
+    "/robotis_" + std::to_string(robot_id) + "/walking/command", 10, std::bind(&WalkingModule::walkingCommandCallback, this, std::placeholders::_1));
   auto walking_param_sub = this->create_subscription<op3_walking_module_msgs::msg::WalkingParam>(
-    "/robotis/walking/set_params", 10, std::bind(&WalkingModule::walkingParameterCallback, this, std::placeholders::_1));
+    "/robotis_" + std::to_string(robot_id) + "/walking/set_params", 10, std::bind(&WalkingModule::walkingParameterCallback, this, std::placeholders::_1));
 
   rclcpp::Rate rate(1000.0 / control_cycle_msec_);
   while (rclcpp::ok())

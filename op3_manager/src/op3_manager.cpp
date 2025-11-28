@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman
+    Modified: Blenders FC
+ */
 
 /* ROS2 API Header */
 #include <rclcpp/rclcpp.hpp>
@@ -145,6 +147,8 @@ int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("op3_manager");
+  int robot_id = 0;
+  
 
   RCLCPP_INFO(node->get_logger(), "manager->init");
   RobotisController *controller = RobotisController::getInstance();
@@ -156,17 +160,21 @@ int main(int argc, char **argv)
   node->declare_parameter<std::string>("init_file_path", "");
   node->declare_parameter<std::string>("device_name", SUB_CONTROLLER_DEVICE);
   node->declare_parameter<int>("baud_rate", BAUD_RATE);
+  if (!node->has_parameter("robot_id")) {
+    node->declare_parameter<int>("robot_id", 1);
+  }
 
+  robot_id = node->get_parameter("robot_id").as_int();
   node->get_parameter("offset_file_path", g_offset_file);
   node->get_parameter("robot_file_path", g_robot_file);
   node->get_parameter("init_file_path", g_init_file);
   node->get_parameter("device_name", g_device_name);
   node->get_parameter("baud_rate", g_baudrate);
 
-  auto button_sub = node->create_subscription<std_msgs::msg::String>("/robotis/open_cr/button", 1, buttonHandlerCallback);
-  auto dxl_torque_sub = node->create_subscription<std_msgs::msg::String>("/robotis/dxl_torque", 1, dxlTorqueCheckCallback);
-  g_init_pose_pub = node->create_publisher<std_msgs::msg::String>("/robotis/base/ini_pose", 10);
-  g_demo_command_pub = node->create_publisher<std_msgs::msg::String>("/ball_tracker/command", 10);
+  auto button_sub = node->create_subscription<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/open_cr/button", 1, buttonHandlerCallback);
+  auto dxl_torque_sub = node->create_subscription<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/dxl_torque", 1, dxlTorqueCheckCallback);
+  g_init_pose_pub = node->create_publisher<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/base/ini_pose", 10);
+  g_demo_command_pub = node->create_publisher<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/ball_tracker/command", 10);
 
   node->declare_parameter<bool>("simulation", false);
   node->get_parameter("simulation", controller->gazebo_mode_);

@@ -10,6 +10,7 @@ def generate_launch_description():
     robot_file_path_default = get_package_share_directory('op3_manager') + '/config/OP3.robot'
     init_file_path_default = get_package_share_directory('op3_manager') + '/config/dxl_init_OP3.yaml'
     device_name_default = '/dev/ttyUSB0'
+    robot_id_default = 1
 
     return LaunchDescription([
         Node(
@@ -23,7 +24,9 @@ def generate_launch_description():
                 'offset_file_path': offset_file_path_default,
                 'robot_file_path': robot_file_path_default,
                 'init_file_path': init_file_path_default,
-                'device_name': device_name_default
+                'device_name': device_name_default,
+                'robot_id': robot_id_default
+
             }]
         )
     ])

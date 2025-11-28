@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman, Jay Song */
+/* Author: Kayman, Jay Song 
+Modified: Blenders FC
+*/
 
 #include "open_cr_module/open_cr_module.h"
 
@@ -80,11 +82,17 @@ void OpenCRModule::queueThread()
   auto executor = rclcpp::executors::SingleThreadedExecutor();
   executor.add_node(this->get_node_base_interface());
 
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
+
   /* publisher */
-  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis/status", 1);
-  imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/robotis/open_cr/imu", 1);
-  button_pub_ = this->create_publisher<std_msgs::msg::String>("/robotis/open_cr/button", 1);
-  dxl_power_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::SyncWriteItem>("/robotis/sync_write_item", 1);
+  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
+  imu_pub_ = this->create_publisher<sensor_msgs::msg::Imu>("/robotis_" + std::to_string(robot_id) + "/open_cr/imu", 1);
+  button_pub_ = this->create_publisher<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/open_cr/button", 1);
+  dxl_power_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::SyncWriteItem>("/robotis_" + std::to_string(robot_id) + "/sync_write_item", 1);
 
   rclcpp::WallRate rate(1000.0 / control_cycle_msec_);
   while (rclcpp::ok())

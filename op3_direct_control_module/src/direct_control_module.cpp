@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+    Modified: Blenders FC
+*/
 
 #include <cstdio>
 #include "op3_direct_control_module/direct_control_module.h"
@@ -90,27 +92,37 @@ void DirectControlModule::initialize(const int control_cycle_msec, robotis_frame
 
   control_cycle_msec_ = control_cycle_msec;
 
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
+
   /* get Param */
-  this->declare_parameter<double>("/robotis/direct_control/default_moving_time", default_moving_time_);
-  this->declare_parameter<double>("/robotis/direct_control/default_moving_angle", default_moving_angle_);
-  this->declare_parameter<bool>("/robotis/direct_control/check_collision", check_collision_);
+  this->declare_parameter<double>("/robotis_" + std::to_string(robot_id) + "/direct_control/default_moving_time", default_moving_time_);
+  this->declare_parameter<double>("/robotis_" + std::to_string(robot_id) + "/direct_control/default_moving_angle", default_moving_angle_);
+  this->declare_parameter<bool>("/robotis_" + std::to_string(robot_id) + "/direct_control/check_collision", check_collision_);
 
-  this->get_parameter("/robotis/direct_control/default_moving_time", default_moving_time_);
-  this->get_parameter("/robotis/direct_control/default_moving_angle", default_moving_angle_);
-  this->get_parameter("/robotis/direct_control/check_collision", check_collision_);
-
+  this->get_parameter("/robotis_" + std::to_string(robot_id) + "/direct_control/default_moving_time", default_moving_time_);
+  this->get_parameter("/robotis_" + std::to_string(robot_id) + "/direct_control/default_moving_angle", default_moving_angle_);
+  this->get_parameter("/robotis_" + std::to_string(robot_id) + "/direct_control/check_collision", check_collision_);
   /* publish topics */
-  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis/status", 10);
+  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 10);
 }
 
 void DirectControlModule::queueThread()
 {
   auto executor = rclcpp::executors::SingleThreadedExecutor();
   executor.add_node(this->get_node_base_interface());
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
 
   /* subscribe topics */
   auto set_head_joint_sub = this->create_subscription<sensor_msgs::msg::JointState>(
-      "/robotis/direct_control/set_joint_states", 1,
+      "/robotis_" + std::to_string(robot_id) + "/direct_control/set_joint_states", 1,
       std::bind(&DirectControlModule::setJointCallback, this, std::placeholders::_1));
 
   rclcpp::Rate rate(1000.0 / control_cycle_msec_);

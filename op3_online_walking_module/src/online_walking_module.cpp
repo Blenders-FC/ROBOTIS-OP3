@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: SCH */
+/* Author: SCH
+  Modified: Blenders FC
+ */
 
 #include "op3_online_walking_module/online_walking_module.h"
 
@@ -169,12 +171,17 @@ void OnlineWalkingModule::initialize(const int control_cycle_msec, robotis_frame
 {
   control_cycle_sec_ = control_cycle_msec * 0.001;
   queue_thread_      = std::thread(&OnlineWalkingModule::queueThread, this);
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
 
   // Publisher
-  status_msg_pub_       = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis/status", 1);
-  movement_done_pub_    = this->create_publisher<std_msgs::msg::String>("/robotis/movement_done", 1);
-  goal_joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/robotis/online_walking/goal_joint_states", 1);
-  pelvis_pose_pub_      = this->create_publisher<geometry_msgs::msg::PoseStamped>("/robotis/pelvis_pose", 1);
+  status_msg_pub_       = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 1);
+  movement_done_pub_    = this->create_publisher<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/movement_done", 1);
+  goal_joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/robotis_" + std::to_string(robot_id) + "/online_walking/goal_joint_states", 1);
+  pelvis_pose_pub_      = this->create_publisher<geometry_msgs::msg::PoseStamped>("/robotis_" + std::to_string(robot_id) + "/pelvis_pose", 1);
 
   // Service
 //  get_preview_matrix_client_ = this->create_client<op3_online_walking_module_msgs::srv::GetPreviewMatrix>("/robotis/online_walking/get_preview_matrix");
@@ -185,25 +192,31 @@ void OnlineWalkingModule::queueThread()
   auto executor = rclcpp::executors::SingleThreadedExecutor();
   executor.add_node(this->get_node_base_interface());
 
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
+
   // Subscriber
-  auto reset_body_sub_ = this->create_subscription<std_msgs::msg::Bool>("/robotis/online_walking/reset_body", 5,
+  auto reset_body_sub_ = this->create_subscription<std_msgs::msg::Bool>("/robotis_" + std::to_string(robot_id) + "/online_walking/reset_body", 5,
                                                        std::bind(&OnlineWalkingModule::setResetBodyCallback, this, std::placeholders::_1));
-  auto joint_pose_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::JointPose>("/robotis/online_walking/goal_joint_pose", 5,
+  auto joint_pose_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::JointPose>("/robotis_" + std::to_string(robot_id) + "/online_walking/goal_joint_pose", 5,
                                                        std::bind(&OnlineWalkingModule::goalJointPoseCallback, this, std::placeholders::_1));
-  auto kinematics_pose_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::KinematicsPose>("/robotis/online_walking/goal_kinematics_pose", 5,
+  auto kinematics_pose_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::KinematicsPose>("/robotis_" + std::to_string(robot_id) + "/online_walking/goal_kinematics_pose", 5,
                                                             std::bind(&OnlineWalkingModule::goalKinematicsPoseCallback, this, std::placeholders::_1));
-  auto foot_step_command_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::FootStepCommand>("/robotis/online_walking/foot_step_command", 5,
+  auto foot_step_command_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::FootStepCommand>("/robotis_" + std::to_string(robot_id) + "/online_walking/foot_step_command", 5,
                                                               std::bind(&OnlineWalkingModule::footStepCommandCallback, this, std::placeholders::_1));
-  auto walking_param_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::WalkingParam>("/robotis/online_walking/walking_param", 5,
+  auto walking_param_sub_ = this->create_subscription<op3_online_walking_module_msgs::msg::WalkingParam>("/robotis_" + std::to_string(robot_id) + "/online_walking/walking_param", 5,
                                                           std::bind(&OnlineWalkingModule::walkingParamCallback, this, std::placeholders::_1));
-  auto wholebody_balance_msg_sub = this->create_subscription<std_msgs::msg::String>("/robotis/online_walking/wholebody_balance_msg", 5,
+  auto wholebody_balance_msg_sub = this->create_subscription<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/online_walking/wholebody_balance_msg", 5,
                                                                  std::bind(&OnlineWalkingModule::setWholebodyBalanceMsgCallback, this, std::placeholders::_1));
-  auto body_offset_msg_sub = this->create_subscription<geometry_msgs::msg::Pose>("/robotis/online_walking/body_offset", 5,
+  auto body_offset_msg_sub = this->create_subscription<geometry_msgs::msg::Pose>("/robotis_" + std::to_string(robot_id) + "/online_walking/body_offset", 5,
                                                            std::bind(&OnlineWalkingModule::setBodyOffsetCallback, this, std::placeholders::_1));
-  auto foot_distance_msg_sub = this->create_subscription<std_msgs::msg::Float64>("/robotis/online_walking/foot_distance", 5,
+  auto foot_distance_msg_sub = this->create_subscription<std_msgs::msg::Float64>("/robotis_" + std::to_string(robot_id) + "/online_walking/foot_distance", 5,
                                                              std::bind(&OnlineWalkingModule::setFootDistanceCallback, this, std::placeholders::_1));
 
-  auto footsteps_sub = this->create_subscription<op3_online_walking_module_msgs::msg::Step2DArray>("/robotis/online_walking/footsteps_2d", 5,
+  auto footsteps_sub = this->create_subscription<op3_online_walking_module_msgs::msg::Step2DArray>("/robotis_" + std::to_string(robot_id) + "/online_walking/footsteps_2d", 5,
                                                      std::bind(&OnlineWalkingModule::footStep2DCallback, this, std::placeholders::_1));
 
 //  auto imu_data_sub = this->create_subscription<sensor_msgs::msg::Imu>("/robotis/sensor/imu/imu", 5,
@@ -214,9 +227,9 @@ void OnlineWalkingModule::queueThread()
 //                                                     std::bind(&OnlineWalkingModule::rightFootForceTorqueOutputCallback, this, std::placeholders::_1));
 
   // Service
-  auto get_joint_pose_server = this->create_service<op3_online_walking_module_msgs::srv::GetJointPose>("/robotis/online_walking/get_joint_pose",
+  auto get_joint_pose_server = this->create_service<op3_online_walking_module_msgs::srv::GetJointPose>("/robotis_" + std::to_string(robot_id) + "/online_walking/get_joint_pose",
                                                                        std::bind(&OnlineWalkingModule::getJointPoseCallback, this, std::placeholders::_1, std::placeholders::_2));
-  auto get_kinematics_pose_server = this->create_service<op3_online_walking_module_msgs::srv::GetKinematicsPose>("/robotis/online_walking/get_kinematics_pose",
+  auto get_kinematics_pose_server = this->create_service<op3_online_walking_module_msgs::srv::GetKinematicsPose>("/robotis_" + std::to_string(robot_id) + "/online_walking/get_kinematics_pose",
                                                                             std::bind(&OnlineWalkingModule::getKinematicsPoseCallback, this, std::placeholders::_1, std::placeholders::_2));
 
   rclcpp::Rate rate(1.0 / control_cycle_sec_);

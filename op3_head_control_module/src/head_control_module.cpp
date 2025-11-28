@@ -14,7 +14,9 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Author: Kayman */
+/* Author: Kayman 
+    Modified: Blenders FC
+*/
 
 #include <stdio.h>
 #include "op3_head_control_module/head_control_module.h"
@@ -76,8 +78,13 @@ void HeadControlModule::initialize(const int control_cycle_msec, robotis_framewo
 
   control_cycle_msec_ = control_cycle_msec;
 
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
   /* publish topics */
-  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis/status", 10);
+  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 10);
 }
 
 void HeadControlModule::queueThread()
@@ -85,14 +92,19 @@ void HeadControlModule::queueThread()
   auto executor = rclcpp::executors::SingleThreadedExecutor();
   executor.add_node(this->get_node_base_interface());
 
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+  }
+  robot_id = this->get_parameter("robot_id").as_int();
+
   /* subscribe topics */
   auto set_head_joint_sub = this->create_subscription<sensor_msgs::msg::JointState>(
-      "/robotis/head_control/set_joint_states", 10, std::bind(&HeadControlModule::setHeadJointCallback, this, std::placeholders::_1));
+      "/robotis_" + std::to_string(robot_id) + "/head_control/set_joint_states", 10, std::bind(&HeadControlModule::setHeadJointCallback, this, std::placeholders::_1));
   auto set_head_joint_offset_sub = this->create_subscription<sensor_msgs::msg::JointState>(
-      "/robotis/head_control/set_joint_states_offset", 10, std::bind(&HeadControlModule::setHeadJointOffsetCallback, this, std::placeholders::_1));
+      "/robotis_" + std::to_string(robot_id) + "/head_control/set_joint_states_offset", 10, std::bind(&HeadControlModule::setHeadJointOffsetCallback, this, std::placeholders::_1));
   auto set_head_scan_sub = this->create_subscription<std_msgs::msg::String>(
-      "/robotis/head_control/scan_command", 10, std::bind(&HeadControlModule::setHeadScanCallback, this, std::placeholders::_1));
-
+      "/robotis_" + std::to_string(robot_id) + "/head_control/scan_command", 10, std::bind(&HeadControlModule::setHeadScanCallback, this, std::placeholders::_1));
   rclcpp::Rate rate(1000.0 / control_cycle_msec_);
   while (rclcpp::ok())
   {

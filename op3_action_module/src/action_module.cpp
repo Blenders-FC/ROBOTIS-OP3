@@ -14,10 +14,13 @@
 * limitations under the License.
 *******************************************************************************/
 
-/* Authors: Kayman, Jay Song */
+/* Authors: Kayman, Jay Song  
+   Modified: Blenders FC
+ */
 
 #include <cstdio>
 #include <sstream>
+#include <string>
 #include "rclcpp/rclcpp.hpp"
 #include "op3_action_module/action_module.h"
 
@@ -113,21 +116,24 @@ void ActionModule::queueThread()
 {
   auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   executor->add_node(this->get_node_base_interface());
-
+  int robot_id = 0;
+  if (!this->has_parameter("robot_id")) {
+    this->declare_parameter<int>("robot_id", 1);
+}
+  robot_id = this->get_parameter("robot_id").as_int();
   /* publisher */
-  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis/status", 10);
-  done_msg_pub_ = this->create_publisher<std_msgs::msg::String>("/robotis/movement_done", 10);
+  status_msg_pub_ = this->create_publisher<robotis_controller_msgs::msg::StatusMsg>("/robotis_" + std::to_string(robot_id) + "/status", 10);
+  done_msg_pub_ = this->create_publisher<std_msgs::msg::String>("/robotis_" + std::to_string(robot_id) + "/movement_done", 10);
 
   /* subscriber */
   auto action_page_sub = this->create_subscription<std_msgs::msg::Int32>(
-      "/robotis/action/page_num", 10, std::bind(&ActionModule::pageNumberCallback, this, std::placeholders::_1));
+      "/robotis_" + std::to_string(robot_id) + "/action/page_num", 10, std::bind(&ActionModule::pageNumberCallback, this, std::placeholders::_1));
   auto start_action_sub = this->create_subscription<op3_action_module_msgs::msg::StartAction>(
-      "/robotis/action/start_action", 10, std::bind(&ActionModule::startActionCallback, this, std::placeholders::_1));
+      "/robotis_" + std::to_string(robot_id) + "/action/start_action", 10, std::bind(&ActionModule::startActionCallback, this, std::placeholders::_1));
 
   /* ROS Service Callback Functions */
   auto is_running_server = this->create_service<op3_action_module_msgs::srv::IsRunning>(
-      "/robotis/action/is_running", std::bind(&ActionModule::isRunningServiceCallback, this, std::placeholders::_1, std::placeholders::_2));
-
+      "/robotis_" + std::to_string(robot_id) + "/action/is_running", std::bind(&ActionModule::isRunningServiceCallback, this, std::placeholders::_1, std::placeholders::_2));
   rclcpp::Rate rate(1000.0 / control_cycle_msec_);
   while (rclcpp::ok())
   {
