@@ -20,6 +20,7 @@
 
 #include <cstdio>
 #include "op3_direct_control_module/direct_control_module.h"
+#include <algorithm>
 
 using namespace std::chrono_literals;
 
@@ -160,8 +161,16 @@ void DirectControlModule::setJointCallback(const sensor_msgs::msg::JointState::S
 
   if (is_moving_ == true)
   {
-    goal_velocity_ = calc_joint_vel_tra_.block(tra_count_, 0, 1, result_.size());
-    goal_acceleration_ = calc_joint_accel_tra_.block(tra_count_, 0, 1, result_.size());
+    tra_lock_.lock();
+    const int rows = static_cast<int>(calc_joint_vel_tra_.rows());
+    if (is_moving_ == true && rows > 0)
+    {
+      // at the very end of a trajectory tra_count_ == rows; use the last row
+      const int idx = std::min<int>(tra_count_, rows - 1);
+      goal_velocity_     = calc_joint_vel_tra_.block(idx, 0, 1, result_.size());
+      goal_acceleration_ = calc_joint_accel_tra_.block(idx, 0, 1, result_.size());
+    }
+    tra_lock_.unlock();
   }
 
   // moving time
@@ -235,6 +244,7 @@ void DirectControlModule::setJointCallback(const sensor_msgs::msg::JointState::S
 
     diff_length = 0.0;
     result = getDiff(op3_kinematics_for_target, LEFT_END_EFFECTOR_INDEX, BASE_INDEX, diff_length);
+    delete op3_kinematics_for_target;
     if(result == true && diff_length < 0.075)
       will_be_collision_ = true;
   }
@@ -350,6 +360,13 @@ bool DirectControlModule::isRunning()
 
 void DirectControlModule::onModuleEnable()
 {
+  tra_lock_.lock();
+  tra_size_ = 0;
+  tra_count_ = 0;
+  is_moving_ = false;
+  stop_process_ = false;
+  tra_lock_.unlock();
+  
   is_updated_ = false;
   is_blocked_ = false;
   r_min_diff_ = 0.07;
